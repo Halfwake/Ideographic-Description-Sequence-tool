@@ -11,7 +11,7 @@ inited = False
 def check_init():
     global inited
     if not inited:
-        with open("/var/www/flask/ids/ids.txt", encoding="utf-8") as f_obj:
+        with open(IDS_FILE_NAME, encoding="utf-8") as f_obj:
             find_load(f_obj)
         inited = True
 
