@@ -1,15 +1,30 @@
 <html>
 <head>
-  <title>Web Interface</title>
+  <title>Kanji composition search tool</title>
+<style>
+
+</style>
 </head>
 <body>
-  <h1>Web Interface</h1>
+  <h1>Kanji composition search tool</h1>
   <form action="/find" method="get">
-    Text:
-    <input type="text" name="lookup">
-    <input type="checkbox" name="reverse">
-    <input type="checkbox" name="norecurse">
+    <input type="text" name="lookup" value="{{ lookup }}">
+    Components/kanji
+    <br>
+    <input type="checkbox" name="reverse" {{ reverse_checked }}>
+    Reverse (characters to components)
+    <br>
+    <input type="checkbox" name="norecurse" {{ norecurse_checked }}>
+    No recursion (prevents de/composition explosion for complex kanji or single simple components)
+    <br>
     <input type="submit" value="submit">
+	<br>
+	<div class=output>
+	{{ output }}
+	</div>
   </form>
+  <p>
+    <a href="https://github.com/Halfwake/Ideographic-Description-Sequence-tool">Code and license</a>
+  <p>
 </body>
 </html>

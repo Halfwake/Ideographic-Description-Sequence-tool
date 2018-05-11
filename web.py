@@ -3,6 +3,7 @@ from flask import request
 from flask import render_template, url_for, redirect
 
 from find import search_components, IDS_FILE_NAME
+from find import load as find_load
 
 app = Flask(__name__)
 
@@ -17,9 +18,18 @@ def find():
     norecurse = request.args.get('norecurse')
     if lookup:
         with open(IDS_FILE_NAME, encoding="utf-8") as f_obj:
-            return '\n'.join(search_components(f_obj, lookup, reverse = (reverse == 'on'), norecurse = (norecurse == 'on')))
+            output = '\n'.join(search_components(lookup, reverse = (reverse == 'on'), norecurse = (norecurse == 'on')))
+            reverse_checked = "checked"
+            if reverse != 'on':
+                reverse_checked = ""
+            norecurse_checked = "checked"
+            if norecurse != 'on':
+                norecurse_checked = ""
+            return render_template("index.html", lookup = lookup, output = output, reverse_checked = reverse_checked, norecurse_checked = norecurse_checked)
     else:
         return 'Invalid Query Parameters'
 
 if __name__ == '__main__':
+    with open(IDS_FILE_NAME, encoding="utf-8") as f_obj:
+        find_load(f_obj)
     app.run()

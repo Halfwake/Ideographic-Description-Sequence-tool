@@ -6,33 +6,35 @@
 # note: depends on the accuracy of ids.txt. for some characters, like 祭, it's pretty bad.
 # see also: http://www.chise.org/ids-find
 
-contains = {}
+contains_forward = {}
+contains_reverse = {}
 
 def is_descriptor(c):
     c = ord(c)
-    if c < 0x2FF0 or c > 0x2FFB:
-        return False
-    else:
-        return True
+    return c >= 0x2FF0 and c <= 0x2FFB
 
-import argparse, sys, re
+import sys, re
 
-def find_recursive(c, first=True, norecurse = False):
+def find_recursive(c, first, reverse, norecurse):
     recurse = set()
-    if c in contains and (first or not norecurse):
+    if not reverse:
+        mycontains = contains_forward
+    else:
+        mycontains = contains_reverse
+    if c in mycontains and (first or not norecurse):
         if not first:
             recurse = recurse | set([c])
-        for n in contains[c]:
-            recurse = recurse | find_recursive(n, False)
+        for n in mycontains[c]:
+            recurse = recurse | find_recursive(n, False, reverse, norecurse)
     else:
         recurse = recurse | set([c])
     return recurse
 
-def find_string(string, norecurse):
+def find_string(string, reverse, norecurse):
     string = string.strip()
     sets = []
     for char in string:
-        myset = find_recursive(char, norecurse)
+        myset = find_recursive(char, True, reverse, norecurse)
         sets += [myset]
     
     myset = sets[0]
@@ -44,8 +46,9 @@ def force_print(string):
     sys.stdout.buffer.write(string.encode("utf-8"))
 
 IDS_FILE_NAME = 'ids.txt'
-    
-def search_components(f_obj, lookup_char, reverse = False, norecurse = False):
+
+def load(f_obj):
+    global contains_forward, contains_reverse
     for s in f_obj:
         s = re.sub(r"\[[^\]]*\]", "", s)
         fields = s.split("\t")
@@ -59,23 +62,26 @@ def search_components(f_obj, lookup_char, reverse = False, norecurse = False):
                 continue
             if c == char:
                 continue
-            if not reverse:
-                if c not in contains:
-                    contains[c] = set()
-                contains[c].add(char)
-            else:
-                if char not in contains:
-                    contains[char] = set()
-                contains[char].add(c)
-    
-        return sorted(find_string(lookup_char, norecurse))
-    
-if __name__ == "__main__":    
+            
+            if c not in contains_forward:
+                contains_forward[c] = set()
+            contains_forward[c].add(char)
+            
+            if char not in contains_reverse:
+                contains_reverse[char] = set()
+            contains_reverse[char].add(c)
+
+def search_components(lookup_char, reverse = False, norecurse = False):
+    return sorted(find_string(lookup_char, reverse, norecurse))
+
+if __name__ == "__main__":
+    import argparse
     parser = argparse.ArgumentParser(description="Ideographic Description Sequence tool")
     parser.add_argument("lookup_char", help="String of components to find in characters.")
     parser.add_argument("-r", "--reverse", dest="reverse", action="store_true", help="Decompose instead of compose.")
-    parser.add_argument("-n", "--norecurse", dest="norecurse", action="store_true", help="First level of recursion only.")    
-    args = parser.parse_args()    
+    parser.add_argument("-n", "--norecurse", dest="norecurse", action="store_true", help="First level of recursion only.")
+    args = parser.parse_args()
     with open(IDS_FILE_NAME, encoding="utf-8") as f_obj:
-        force_print("\n".join(search_components(f_obj, args.lookup_char, args.reverse, args.norecurse)))
-                        
+        load(f_obj)
+    force_print("\n".join(search_components(args.lookup_char, args.reverse, args.norecurse)))
+
