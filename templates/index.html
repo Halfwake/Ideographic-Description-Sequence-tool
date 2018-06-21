@@ -17,6 +17,9 @@
     <input type="checkbox" name="norecurse" {{ norecurse_checked }}>
     No recursion (prevents de/composition explosion for complex kanji or single simple components)
     <br>
+    <input type="checkbox" name="common" {{ common_checked }}>
+    Restrict composition to relatively plausible characters (based on real data and kanken)
+    <br>
     <input type="submit" value="submit">
 	<br>
 	<div class=output>

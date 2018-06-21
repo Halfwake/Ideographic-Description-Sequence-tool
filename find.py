@@ -8,6 +8,7 @@
 
 contains_forward = {}
 contains_reverse = {}
+common_set = set()
 
 def is_descriptor(c):
     c = ord(c)
@@ -46,6 +47,7 @@ def force_print(string):
     sys.stdout.buffer.write(string.encode("utf-8"))
 
 IDS_FILE_NAME = 'ids.txt'
+COMMON_FILE_NAME = 'likely.txt'
 
 def load(f_obj):
     global contains_forward, contains_reverse
@@ -71,8 +73,23 @@ def load(f_obj):
                 contains_reverse[char] = set()
             contains_reverse[char].add(c)
 
-def search_components(lookup_char, reverse = False, norecurse = False):
-    return sorted(find_string(lookup_char, reverse, norecurse))
+
+def load_common(f_obj):
+    global common_set
+    for s in f_obj:
+        s = s.strip()
+        if s != "":
+            common_set.add(s)
+
+def search_components(lookup_char, reverse = False, norecurse = False, common = False):
+    ret = sorted(find_string(lookup_char, reverse, norecurse))
+    if common and not reverse:
+        oldret = ret
+        ret = []
+        for n in oldret:
+            if n in common_set:
+                ret += [n]
+    return ret
 
 if __name__ == "__main__":
     import argparse
@@ -80,8 +97,11 @@ if __name__ == "__main__":
     parser.add_argument("lookup_char", help="String of components to find in characters.")
     parser.add_argument("-r", "--reverse", dest="reverse", action="store_true", help="Decompose instead of compose.")
     parser.add_argument("-n", "--norecurse", dest="norecurse", action="store_true", help="First level of recursion only.")
+    parser.add_argument("-c", "--common", dest="norecurse", action="store_true", help="First level of recursion only.")
     args = parser.parse_args()
     with open(IDS_FILE_NAME, encoding="utf-8") as f_obj:
         load(f_obj)
+    with open(COMMON_FILE_NAME, encoding="utf-8") as f_obj:
+        load_common(f_obj)
     force_print("\n".join(search_components(args.lookup_char, args.reverse, args.norecurse)))
 
